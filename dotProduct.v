@@ -63,7 +63,7 @@ module dotProduct
 		MEMController #(.Addr_Width(Addr_Width), .Ram_Depth(Ram_Depth), .Nums_SRAM(Nums_SRAM), 
 		.bits_Computation(bits_Computation), .Nums_Computation(Nums_Computation), .Para_Deg(Para_Deg))
 		memcontroller (.clk(clk), .Mem_reset(Mem_reset), .Comp_reset(Comp_reset), .Computing(Computing), 
-						.Mem_Clear(memclear), .En_Chip_Select(cs), .En_Write(en_w), .En_Read(en_r), .Addr_Read(read_addr), .Addr_Write(write_addr), .test(state));
+		.Mem_Clear(memclear), .En_Chip_Select(cs), .En_Write(en_w), .En_Read(en_r), .Addr_Read(read_addr), .Addr_Write(write_addr), .test(state));
 
 		
 		genvar SRAM_Index;
