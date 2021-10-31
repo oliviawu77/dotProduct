@@ -2,13 +2,13 @@
 
 module multiplier_tb
 		#(
-			parameter data_width = 8)
+			parameter Data_Width = 8)
 		();
 		
-		reg [data_width-1:0] in_data0, in_data1;
-		wire [data_width*2-1:0] out_data;
+		reg [Data_Width-1:0] in_data0, in_data1;
+		wire [Data_Width*2-1:0] out_data;
 		
-		multiplier #(.data_width(data_width)) mul(in_data0, in_data1, out_data);
+		multiplier #(.Data_Width(Data_Width)) mul(in_data0, in_data1, out_data);
 		
 		initial begin
 			in_data0 = 0;
