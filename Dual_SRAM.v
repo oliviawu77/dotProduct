@@ -9,6 +9,7 @@ module Dual_SRAM
 			
 			input clk, Mem_Clear, Chip_Select, En_Write, En_Read;
 			input [Addr_Width-1:0] Addr_Write, Addr_Read;
+
 			input [Para_Deg * Data_Width-1:0] Write_Data;
 			
 			output [Para_Deg * Data_Width-1:0] Read_Data;
