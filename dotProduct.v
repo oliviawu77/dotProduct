@@ -41,28 +41,33 @@ module dotProduct
 			parameter Data_Width_Out = 16
 		)
 		(clk, 
-		Mem_reset, Comp_reset, Computing, //MEMController
+		Mem_reset, Comp_reset, Mem_Index_reset, Computing,
 		PE_reset, load_old_output, result,
-		state); //PEgroup
+		state, load_from_file, input_data_from_file, output_data_from_file,
+		test_r , test_w); 
 		
-		input clk, Mem_reset, Comp_reset, Computing;
+		input clk, Mem_reset, Comp_reset, Mem_Index_reset, Computing;
+		input PE_reset, load_old_output, load_from_file;
+		input [Nums_SRAM_In * Para_Deg * Data_Width_In - 1:0] input_data_from_file;
+		input [Nums_SRAM_Out * Para_Deg * Data_Width_Out - 1:0] output_data_from_file;
 		
-		input PE_reset, load_old_output;
 		output [Para_Deg * Data_Width_Out * 2 - 1:0] result;
-		
+		output [bits_Computation-1:0] state;
+
+		output [Nums_SRAM * Addr_Width - 1:0] test_r , test_w;		
 
 		wire [Nums_SRAM - 1:0] memclear, cs, en_w, en_r;
-		wire [Nums_SRAM * Ram_Depth - 1:0] read_addr, write_addr;
+		wire [Nums_SRAM * Addr_Width - 1:0] read_addr, write_addr;
 
 		wire [Para_Deg * Data_Width_In - 1:0] data_in [0:Nums_SRAM_In-1];
-		wire [Para_Deg * Data_Width_In - 1:0] old_output;
+		wire [Para_Deg * Data_Width_Out - 1:0] old_output;
 		wire [Para_Deg * Data_Width_Out - 1:0] data_out [0:Nums_SRAM_Out-1];
-
-		output [bits_Computation-1:0] state;
+		wire [Para_Deg * Data_Width_In - 1:0] write_in_data [0:Nums_SRAM_In-1];
+		wire [Para_Deg * Data_Width_Out - 1:0] write_out_data [0:Nums_SRAM_Out-1];
 
 		MEMController #(.Addr_Width(Addr_Width), .Ram_Depth(Ram_Depth), .Nums_SRAM(Nums_SRAM), 
 		.bits_Computation(bits_Computation), .Nums_Computation(Nums_Computation), .Para_Deg(Para_Deg))
-		memcontroller (.clk(clk), .Mem_reset(Mem_reset), .Comp_reset(Comp_reset), .Computing(Computing), 
+		memcontroller (.clk(clk), .Mem_reset(Mem_reset), .Comp_reset(Comp_reset), .Mem_Index_reset(Mem_Index_reset), .Computing(Computing), .load_from_file(load_from_file), 
 		.Mem_Clear(memclear), .En_Chip_Select(cs), .En_Write(en_w), .En_Read(en_r), .Addr_Read(read_addr), .Addr_Write(write_addr), .test(state));
 
 		
@@ -71,19 +76,30 @@ module dotProduct
 			for(SRAM_Index = 0; SRAM_Index < Nums_SRAM_In; SRAM_Index = SRAM_Index + 1) begin: SRAMsINs
 				Dual_SRAM #(.Data_Width(Data_Width_In), .Addr_Width(Addr_Width), .Ram_Depth(Ram_Depth), .Para_Deg(Para_Deg))
 				srams_inputs (.clk(clk), .Mem_Clear(memclear[SRAM_Index]), .Chip_Select(cs[SRAM_Index]), .En_Write(en_w[SRAM_Index]),
-				.En_Read(en_r[SRAM_Index]), .Addr_Write(write_addr[Ram_Depth * SRAM_Index +: Ram_Depth]), 
-				.Addr_Read(read_addr[Ram_Depth * SRAM_Index +: Ram_Depth]), .Write_Data(0), .Read_Data(data_in[SRAM_Index]));
+				.En_Read(en_r[SRAM_Index]), .Addr_Write(write_addr[Addr_Width * SRAM_Index +: Addr_Width]), 
+				.Addr_Read(read_addr[Addr_Width * SRAM_Index +: Addr_Width]), .Write_Data(write_in_data[SRAM_Index]), .Read_Data(data_in[SRAM_Index]));
+				assign write_in_data[SRAM_Index] = load_from_file ? input_data_from_file[SRAM_Index * Para_Deg * Data_Width_In +: Data_Width_In] : 0;
+
+				
+				assign test_r[SRAM_Index * Addr_Width +: Addr_Width] = read_addr[Addr_Width * SRAM_Index +: Addr_Width];
+				assign test_w[SRAM_Index * Addr_Width +: Addr_Width] = write_addr[Addr_Width * SRAM_Index +: Addr_Width];
 			end
 			for(SRAM_Index = Nums_SRAM_In; SRAM_Index < Nums_SRAM; SRAM_Index = SRAM_Index + 1) begin: SRAMsOuts
 				Dual_SRAM #(.Data_Width(Data_Width_Out), .Addr_Width(Addr_Width), .Ram_Depth(Ram_Depth), .Para_Deg(Para_Deg))
 				srams_outputs (.clk(clk), .Mem_Clear(memclear[SRAM_Index]), .Chip_Select(cs[SRAM_Index]), .En_Write(en_w[SRAM_Index]), 
-				.En_Read(en_r[SRAM_Index]), .Addr_Write(write_addr[Ram_Depth * SRAM_Index +: Ram_Depth]), 
-				.Addr_Read(read_addr[Ram_Depth * SRAM_Index +: Ram_Depth]), .Write_Data(data_out[SRAM_Index-Nums_SRAM_In]), .Read_Data(old_output));
+				.En_Read(en_r[SRAM_Index]), .Addr_Write(write_addr[Addr_Width * SRAM_Index +: Addr_Width]), 
+				.Addr_Read(read_addr[Addr_Width * SRAM_Index +: Addr_Width]), .Write_Data(write_out_data[SRAM_Index-Nums_SRAM_In]), .Read_Data(old_output));
+				assign write_out_data[SRAM_Index-Nums_SRAM_In] = load_from_file ? 
+						output_data_from_file[(SRAM_Index-Nums_SRAM_In) * Para_Deg * Data_Width_Out +: Data_Width_Out] : data_out[SRAM_Index-Nums_SRAM_In];
+
+
+				assign test_r[(SRAM_Index-Nums_SRAM_In) * Addr_Width +: Addr_Width] = read_addr[Addr_Width * SRAM_Index +: Addr_Width];
+				assign test_w[(SRAM_Index-Nums_SRAM_In) * Addr_Width +: Addr_Width] = write_addr[Addr_Width * SRAM_Index +: Addr_Width];
 			end
 		endgenerate
 
 		assign result = data_out[0];
-		
+				
 		PEGroup #(.Data_Width(Data_Width_In), .Para_Deg(Para_Deg))
 		pegroups (.clk(clk), .reset(PE_reset), .load_old_output(load_old_output), .data0(data_in[0]), .data1(data_in[1]), .result(data_out[0]), .old_output(old_output));
 		
