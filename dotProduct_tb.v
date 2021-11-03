@@ -11,7 +11,7 @@ module dotProduct_tb
 			parameter Nums_Pipeline_Stages = 4,
 			parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
 			parameter Total_Computation_Steps = Nums_Data + Pipeline_Tail,
-			parameter Para_Deg = 1,
+			parameter Para_Deg = 2,
 			parameter Data_Width_In = 8,
 			parameter Data_Width_Out = 16
 		)
@@ -28,7 +28,7 @@ module dotProduct_tb
 		//tests
 
 		wire [Nums_SRAM * Addr_Width - 1:0] test_r , test_w;
-		wire [Para_Deg * Data_Width_In - 1:0] test_data;
+		wire [Nums_SRAM_In * Para_Deg * Data_Width_In - 1:0] test_data;
 
 		//
 		reg [Data_Width_In-1:0] buffer_in; //to store data read from file

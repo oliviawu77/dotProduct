@@ -65,7 +65,7 @@ module dotProduct
 		
 		//tests
 		output [Nums_SRAM * Addr_Width - 1:0] test_r , test_w;
-		output [Para_Deg * Data_Width_In - 1:0] test_data;
+		output [Nums_SRAM_In * Para_Deg * Data_Width_In - 1:0] test_data;
 		//
 
 		wire [Nums_SRAM - 1:0] memclear, cs, en_w, en_r;
@@ -113,7 +113,16 @@ module dotProduct
 		assign result = data_out[0];
 		
 		//test
-		assign test_data = data_in[0];
+		/*
+		genvar i;
+		generate
+			for(i = 0; i < Nums_SRAM_In; i = i + 1) begin: test
+				assign test_data[i * Para_Deg * Data_Width_In +: Data_Width_In] = data_in[i];
+			end
+		endgenerate
+		*/
+		assign test_data[15:0] = data_in[0];
+		assign test_data[31:16] = data_in[1];		
 
 		PEGroup #(.Data_Width(Data_Width_In), .Para_Deg(Para_Deg))
 		pegroups (.clk(clk), .reset(PE_reset), .load_old_output(load_old_output), .data0(data_in[0]), .data1(data_in[1]), .result(data_out[0]), .old_output(old_output));
