@@ -7,7 +7,7 @@ module MEMController_tb
                 parameter Nums_SRAM_In = 2,
                 parameter Nums_SRAM_Out = 1,
                 parameter Nums_SRAM = Nums_SRAM_In + Nums_SRAM_Out,
-                parameter Nums_Data_in_bits = 4,
+                parameter Nums_Data_in_bits = 2,
                 parameter Nums_Data = 1 << Nums_Data_in_bits,
                 parameter Nums_Pipeline_Stages = 4,
                 parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
@@ -16,17 +16,20 @@ module MEMController_tb
             )
             ();
             
-            reg clk, Mem_reset, Comp_reset, Mem_Index_reset, load_from_file, Computing;
+            reg clk, Mem_reset, Comp_reset, Mem_Index_reset, load_from_file, Computing, write_to_file;
             wire [Nums_SRAM - 1:0] Mem_Clear, En_Chip_Select, En_Write, En_Read;
             wire [Nums_SRAM * Addr_Width - 1:0] Addr_Read , Addr_Write;
-            wire [Nums_Data_in_bits:0] test;
 
+            wire loading_signal = 0, computing_signal = 0, write_to_file_signal = 0;
+            wire [Nums_Data_in_bits:0] test;
+            wire [Addr_Width:0] mem_index_test;
 
             MEMController #(.Addr_Width(Addr_Width), .Ram_Depth(Ram_Depth), .Nums_SRAM_In(Nums_SRAM_In), .Nums_SRAM_Out(Nums_SRAM_Out), 
             .Nums_SRAM(Nums_SRAM), .Nums_Data_in_bits(Nums_Data_in_bits), .Nums_Data(Nums_Data), .Nums_Pipeline_Stages(Nums_Pipeline_Stages),
             .Pipeline_Tail(Pipeline_Tail), .Total_Computation_Steps(Total_Computation_Steps), .Para_Deg(Para_Deg))
-            dut(clk, Mem_reset, Comp_reset, Mem_Index_reset, load_from_file, Computing, 
-                    Mem_Clear, En_Chip_Select, En_Write, En_Read, Addr_Read, Addr_Write, test);
+            dut (clk, Mem_reset, Comp_reset, Mem_Index_reset, load_from_file, Computing, write_to_file, loading_signal, computing_signal, write_to_file_signal,
+                Mem_Clear, En_Chip_Select, En_Write, En_Read, Addr_Read, Addr_Write, 
+                test, mem_index_test);
 
             initial begin
                 clk = 1;
@@ -39,16 +42,9 @@ module MEMController_tb
                 Mem_reset = 0;
                 Comp_reset = 0;
                 Mem_Index_reset = 0;
-                load_from_file = 1;
-                Computing = 0;
-                #32
                 load_from_file = 0;
-                Comp_reset = 1;
-                #2
-                Comp_reset = 0;
                 Computing = 1;
-                #40
-                load_from_file = 0;
+                #2
                 Computing = 0;
             end
             

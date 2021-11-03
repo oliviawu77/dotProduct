@@ -105,7 +105,7 @@ module Dual_SRAM_tb #(
 			En_Read[0] = 1;
 			En_Write[0] = 0;
 			Write_Addr[0] = 0;
-			Read_Addr[0] = 1;
+			Read_Addr[0] = 4;
 
 			En_Read[1] = 1;
 			En_Write[1] = 0;
