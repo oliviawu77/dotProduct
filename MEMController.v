@@ -99,7 +99,7 @@ module MEMController
 				end				
 			end
 			else if(write_to_file_signal) begin
-				if (mem_index_counter < Ram_Depth + 1) begin
+				else if (mem_index_counter < Ram_Depth + 1) begin
 					for(Ram_Index = Nums_SRAM_In; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetWritingSignals
 						En_Chip_Select[Ram_Index] <= 1;
 						En_Read[Ram_Index] <= 1;

@@ -113,7 +113,7 @@ module dotProduct
 				srams_inputs (.clk(clk), .Mem_Clear(memclear[SRAM_Index]), .Chip_Select(cs[SRAM_Index]), .En_Write(en_w[SRAM_Index]),
 				.En_Read(en_r[SRAM_Index]), .Addr_Write(write_addr[Addr_Width * SRAM_Index +: Addr_Width]), 
 				.Addr_Read(read_addr[Addr_Width * SRAM_Index +: Addr_Width]), .Write_Data(write_in_data[SRAM_Index]), .Read_Data(data_in[SRAM_Index]));
-				assign write_in_data[SRAM_Index] = loading_signal ? input_data_from_file[SRAM_Index * Para_Deg * Data_Width_In +: Data_Width_In] : 0;
+				assign write_in_data[SRAM_Index] = loading_signal ? input_data_from_file[SRAM_Index * Para_Deg * Data_Width_In +: Para_Deg * Data_Width_In] : 0;
 				
 				//test data read from memory
 				for(offset_Index = 0; offset_Index < Para_Deg; offset_Index = offset_Index + 1) begin: SRAMsINsParallel
@@ -131,7 +131,7 @@ module dotProduct
 				.Addr_Read(read_addr[Addr_Width * SRAM_Index +: Addr_Width]), .Write_Data(write_out_data[SRAM_Index-Nums_SRAM_In]), .Read_Data(old_output));
 				
 				assign write_out_data[SRAM_Index-Nums_SRAM_In] = loading_signal ? 
-						output_data_from_file[(SRAM_Index-Nums_SRAM_In) * Para_Deg * Data_Width_Out +: Data_Width_Out] : data_out[SRAM_Index-Nums_SRAM_In];
+						output_data_from_file[(SRAM_Index-Nums_SRAM_In) * Para_Deg * Data_Width_Out +: Para_Deg * Data_Width_Out] : data_out[SRAM_Index-Nums_SRAM_In];
 
 				assign test_r[(SRAM_Index) * Addr_Width +: Addr_Width] = read_addr[Addr_Width * SRAM_Index +: Addr_Width];
 				assign test_w[(SRAM_Index) * Addr_Width +: Addr_Width] = write_addr[Addr_Width * SRAM_Index +: Addr_Width];

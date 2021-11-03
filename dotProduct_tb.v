@@ -11,7 +11,7 @@ module dotProduct_tb
 			parameter Nums_Pipeline_Stages = 4,
 			parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
 			parameter Total_Computation_Steps = Nums_Data + Pipeline_Tail,
-			parameter Para_Deg = 1,
+			parameter Para_Deg = 2,
 			parameter Data_Width_In = 8,
 			parameter Data_Width_Out = 16
 		)
@@ -142,6 +142,7 @@ module dotProduct_tb
 					index, offset_Index, input_data_from_file[index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In +: Data_Width_In],
 					 test_w[index * Addr_Width +: Addr_Width], test_r[index * Addr_Width +: Addr_Width],
 					 test_data[index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In +: Data_Width_In], en_write_test);
+					$display("data index: %d", index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In);
 				end
 			end
 			for(index = 0; index < Nums_SRAM_Out; index = index + 1) begin: DataFromFileOutput
