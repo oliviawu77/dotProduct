@@ -1,6 +1,6 @@
 /*
 Notes:
-1. Parallel Function is not verified
+1. Write with Parallel Function is not verified
 
 */
 /*
@@ -50,7 +50,7 @@ module dotProduct
 			parameter Nums_Pipeline_Stages = 4,
 			parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
 			parameter Total_Computation_Steps = Nums_Data + Pipeline_Tail,
-			parameter Para_Deg = 1,
+			parameter Para_Deg = 2,
 			parameter Data_Width_In = 8,
 			parameter Data_Width_Out = 16
 		)

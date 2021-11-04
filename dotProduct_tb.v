@@ -1,12 +1,12 @@
 `timescale 1ms/1ms
 module dotProduct_tb
 		#(
-			parameter Addr_Width = 4,
+			parameter Addr_Width = 5,
 			parameter Ram_Depth = 1 << Addr_Width,
 			parameter Nums_SRAM_In = 2,
 			parameter Nums_SRAM_Out = 1,
 			parameter Nums_SRAM = Nums_SRAM_In + Nums_SRAM_Out,
-			parameter Nums_Data_in_bits = 4,
+			parameter Nums_Data_in_bits = 5,
 			parameter Nums_Data = 1 << Nums_Data_in_bits,
 			parameter Nums_Pipeline_Stages = 4,
 			parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
@@ -97,13 +97,14 @@ module dotProduct_tb
 			#10
 			$display("loading complete!!");
 			Computing = 1;
+			load_old_output = 1;
 			#2
 			$display("start computing!!");
 			#2
 			Computing = 0;
 			input_data_from_file = 0;
 			output_data_from_file = 0;
-			#40
+			#200
 			write_to_file = 1;
 			Mem_Index_reset = 1;
 			#2
@@ -129,20 +130,15 @@ module dotProduct_tb
 		
 		integer index = 0;
 		always #2 begin
-			
 			$display("time= %0d, Mem_reset= %b, Comp_reset= %b, Computing= %b, PE_reset =%b, load_old_output =%b, load_from_file =%b, state =%d"
 			, $time, Mem_reset, Comp_reset, Computing, PE_reset, load_old_output, load_from_file, state);
 
-			$display("mem_index =%d, en_read =%b, test_signal =%b", mem_index_test, test_en_read, write_to_file);
-
-			$display("***Data_From_File***");
 			for(index = 0; index < Nums_SRAM_In; index = index + 1) begin: DataFromFileInput
 				for(offset_Index = 0; offset_Index < Para_Deg; offset_Index = offset_Index + 1) begin: displayInputData
 					$display("input: Filedata[%0d][%0d] =%0d, write_addr: %d, read_addr: %d, read_data[0]: %d, en_write= %b",
 					index, offset_Index, input_data_from_file[index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In +: Data_Width_In],
 					 test_w[index * Addr_Width +: Addr_Width], test_r[index * Addr_Width +: Addr_Width],
 					 test_data[index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In +: Data_Width_In], en_write_test);
-					$display("data index: %d", index * Para_Deg * Data_Width_In + offset_Index * Data_Width_In);
 				end
 			end
 			for(index = 0; index < Nums_SRAM_Out; index = index + 1) begin: DataFromFileOutput
