@@ -11,7 +11,7 @@ module dotProduct_tb
 			parameter Nums_Pipeline_Stages = 4,
 			parameter Pipeline_Tail = Nums_Pipeline_Stages - 1,
 			parameter Total_Computation_Steps = Nums_Data + Pipeline_Tail,
-			parameter Para_Deg = 2,
+			parameter Para_Deg = 1,
 			parameter Data_Width_In = 8,
 			parameter Data_Width_Out = 16
 		)

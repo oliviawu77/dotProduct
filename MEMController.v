@@ -32,18 +32,42 @@ module MEMController
 		integer Ram_Index;
 		integer Addr_Index;
 
+		//reset memory
+		always@(posedge clk) begin
+			if(Mem_reset) begin
+				for(Ram_Index = 0; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemReset
+					Mem_Clear[Ram_Index] <= 0;
+				end
+			end
+		end
 
-		//mode setting(loading or computing or writing)
+		//signal setting(loading or computing or writing)
 		always@(posedge clk) begin
 			if(load_from_file) begin
 				loading_signal <= 1;
 			end
+			else if (loading_signal)  begin
+				if (mem_index_counter < Ram_Depth) begin
+					loading_signal <= loading_signal;
+				end
+				else begin
+					loading_signal <= 0;
+				end
+			end
 			else begin
-				loading_signal <= loading_signal;	
+				loading_signal <= 0;
 			end
 
 			if(Computing) begin
 				computing_signal <= 1;
+			end
+			else if (computing_signal) begin
+				if (computation_step_counter < Total_Computation_Steps) begin
+					computing_signal <= computing_signal;
+				end
+				else begin
+					computing_signal <= 0;
+				end
 			end
 			else begin
 				computing_signal <= computing_signal;
@@ -52,29 +76,65 @@ module MEMController
 			if (write_to_file) begin
 				write_to_file_signal <= 1;	
 			end
+			else if (write_to_file_signal) begin
+				if(mem_index_counter < Ram_Depth + 1) begin
+					write_to_file_signal <= write_to_file_signal;
+				end
+				else begin
+					write_to_file_signal <= 0;
+				end
+			end
 			else begin
 				write_to_file_signal <= write_to_file_signal;
 			end
 
 		end
 		
-		//reset memory or counter
+
+		//set read/write memory index
 		always@(posedge clk) begin
-			if(Mem_reset) begin
-				for(Ram_Index = 0; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemReset
-					Mem_Clear[Ram_Index] <= 0;
+			if(Mem_Index_reset) begin
+				mem_index_counter <= 0;
+			end
+			else if(loading_signal) begin
+				if (mem_index_counter < Ram_Depth) begin
+					mem_index_counter <= mem_index_counter + Para_Deg; 
+				end
+				else begin
+					mem_index_counter <= mem_index_counter;
 				end
 			end
+			else if(write_to_file_signal) begin
+				if (mem_index_counter < Ram_Depth + 1) begin
+					mem_index_counter <= mem_index_counter + Para_Deg;
+				end
+				else begin
+					mem_index_counter <= mem_index_counter;
+				end
+			end
+			else begin
+				mem_index_counter <= mem_index_counter;
+			end			
+		end
+		
+		//set computation steps
+		always@(posedge clk) begin
 			if(Comp_reset) begin
 				computation_step_counter <= 0;
 			end
-			if(Mem_Index_reset) begin
-				mem_index_counter <= 0;
+			else if(computing_signal) begin
+				if (computation_step_counter < Total_Computation_Steps) begin
+					computation_step_counter <= computation_step_counter + Para_Deg;
+				end
+				else begin
+					computation_step_counter <= computation_step_counter;
+				end
 			end
 		end
 
 		//set memory signals
 		always @(posedge clk) begin
+
 			if(loading_signal) begin
 				if (mem_index_counter < Ram_Depth) begin
 					for(Ram_Index = 0; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetLoadingSignals
@@ -84,7 +144,6 @@ module MEMController
 						Addr_Write[Ram_Index * Addr_Width +: Addr_Width] <= mem_index_counter;
 						Addr_Read[Ram_Index * Addr_Width +: Addr_Width] <= mem_index_counter - 2;
 					end
-					mem_index_counter <= mem_index_counter + Para_Deg;
 				end
 				else begin
 					for(Ram_Index = 0; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetNotLoadingSignals
@@ -94,12 +153,11 @@ module MEMController
 						Addr_Write[Ram_Index * Addr_Width +: Addr_Width] <= 0;
 						Addr_Read[Ram_Index * Addr_Width +: Addr_Width] <= 0;
 					end
-					mem_index_counter <= mem_index_counter;
-					loading_signal <= 0;
 				end				
 			end
+
 			else if(write_to_file_signal) begin
-				else if (mem_index_counter < Ram_Depth + 1) begin
+				if (mem_index_counter < Ram_Depth + 1) begin
 					for(Ram_Index = Nums_SRAM_In; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetWritingSignals
 						En_Chip_Select[Ram_Index] <= 1;
 						En_Read[Ram_Index] <= 1;
@@ -107,7 +165,6 @@ module MEMController
 						Addr_Write[Ram_Index * Addr_Width +: Addr_Width] <= 0;
 						Addr_Read[Ram_Index * Addr_Width +: Addr_Width] <= mem_index_counter;
 					end
-					mem_index_counter <= mem_index_counter + Para_Deg;
 				end
 				else begin
 					for(Ram_Index = Nums_SRAM_In; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetNotWritingSignals
@@ -117,16 +174,13 @@ module MEMController
 						Addr_Write[Ram_Index * Addr_Width +: Addr_Width] <= 0;
 						Addr_Read[Ram_Index * Addr_Width +: Addr_Width] <= 0;
 					end
-					mem_index_counter <= mem_index_counter;
-					loading_signal <= 0;
 				end				
 			end
-			
+
 			else if(computing_signal) begin
 				if(computation_step_counter < Total_Computation_Steps) begin
 					for(Ram_Index = 0; Ram_Index < Nums_SRAM; Ram_Index = Ram_Index + 1) begin: MemSetComputingSignalsAllSRAM
 						En_Chip_Select[Ram_Index] <= 1;
-						
 						if(computation_step_counter < Total_Computation_Steps - Pipeline_Tail) begin
 							En_Read[Ram_Index] <= 1;
 							Addr_Read[Ram_Index * Addr_Width +: Addr_Width] <= computation_step_counter;
@@ -149,20 +203,17 @@ module MEMController
 							En_Write[Ram_Index] <= 0;
 							Addr_Write[Ram_Index * Addr_Width +: Addr_Width] <= 0;						
 						end
-					end
-					computation_step_counter <= computation_step_counter + Para_Deg;				
+					end				
 				end
 				else begin
-					//stop computing and clear all memory signals
 					En_Chip_Select <= 0;
 					En_Read <= 0;
 					En_Write <= 0;
 					Addr_Read <= 0;
 					Addr_Write <= 0;
-					computing_signal <= 0;
-					computation_step_counter <= computation_step_counter;
 				end
 			end
+
 			else begin
 				En_Chip_Select <= 0;
 				En_Read <= 0;
